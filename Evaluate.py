@@ -1,4 +1,5 @@
 import pandas as pd
+EPS=1e-12
 
 class Eval():
     """
@@ -49,7 +50,7 @@ class Eval():
             no_of_queries+=1
             hak = self._hits_at_k(query, predict_ids_list[index], k)
             cum_hak+=hak
-        avg_hak = cum_hak/no_of_queries
+        avg_hak = cum_hak/(no_of_queries+EPS)
         return avg_hak
 
     def _reciprocal_rank(self, query_id, predict_ids):
@@ -85,7 +86,7 @@ class Eval():
             no_of_queries+=1
             rr = self._reciprocal_rank(query, predict_ids_list[index])
             cum_rr+=rr
-        mrr = cum_rr/no_of_queries
+        mrr = cum_rr/(no_of_queries+EPS)
         return mrr
 
     def _prec_at_k(self, query_id, predict_ids, k):
@@ -103,7 +104,7 @@ class Eval():
             return -1
         truncated_list = predict_ids[:k]
         intersect = list(set(golden).intersection(truncated_list))
-        prec = len(intersect)/k
+        prec = len(intersect)/(k+EPS)
         return prec
     
     def _avg_prec_at_k(self, q_id_list, predict_ids_list, k):
@@ -125,8 +126,8 @@ class Eval():
                 continue
             no_of_queries+=1
             cum_prec+=prec
-        avg_prec = cum_prec/no_of_queries
-        return avg_prec
+        avg_prec = cum_prec/(no_of_queries+EPS)
+        return avg_prec, no_of_queries
             
 
     def evaluate(self, q_id_list, predict_ids_list):
@@ -138,6 +139,13 @@ class Eval():
         """
         mrr = self._mean_reciprocal_rank(q_id_list, predict_ids_list)
         hits_5 = self._avg_hits_at_k(q_id_list, predict_ids_list, 5)
-        prec_5 = self._avg_prec_at_k(q_id_list, predict_ids_list, 5)
-        print("MRR: {}, \t Hits @ 5: {} \t Precision @ 5: {}".format(mrr, hits_5, prec_5))
+        prec_5, count_5 = self._avg_prec_at_k(q_id_list, predict_ids_list, 5)
+        prec_10, count_10 = self._avg_prec_at_k(q_id_list, predict_ids_list, 10)
+        prec_20, count_20 = self._avg_prec_at_k(q_id_list, predict_ids_list, 20)
+        
+        print("""MRR: {}, \t Hits @ 5: {} 
+            \t Precision @ 5: {}({} Queries considered), 
+            \t Precision @ 10: {}({} Queries considered),
+            \t Precision @ 20: {}({} Queries considered)
+        """.format(mrr, hits_5, prec_5, count_5, prec_10,count_10,prec_20,count_20))
         return
