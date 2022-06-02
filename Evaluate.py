@@ -25,6 +25,8 @@ class Eval():
         RETURNS:
         ret (bool): if query id is in top k of predict_ids, then return 1, else return 0 for that particular query 
         """
+        if len(predict_ids)<k:
+            return -1
         golden = self.qrels[(self.qrels['id_left']==query_id) & (self.qrels['label']==2)].iloc[0]['id_right'] # get id of article corresponding to query
         top_k_list = predict_ids[:k]
         if golden in top_k_list:
@@ -46,10 +48,12 @@ class Eval():
         no_of_queries = 0
         cum_hak = 0
         for index, query in enumerate(q_id_list):
-            if  len(predict_ids_list[index]) < k:
-                raise ValueError('k is greater than number of predicted_id!')
-            no_of_queries+=1
+            if len(predict_ids_list[index])==0: # If no documents found
+                continue
             hak = self._hits_at_k(query, predict_ids_list[index], k)
+            if hak==-1:
+                continue
+            no_of_queries+=1
             cum_hak+=hak
         avg_hak = cum_hak/(no_of_queries+EPS)
         return avg_hak
@@ -84,6 +88,8 @@ class Eval():
         no_of_queries = 0
         cum_rr = 0
         for index, query in enumerate(q_id_list):
+            if len(predict_ids_list[index])==0: # If no documents found
+                continue
             no_of_queries+=1
             rr = self._reciprocal_rank(query, predict_ids_list[index])
             cum_rr+=rr
@@ -121,6 +127,10 @@ class Eval():
         no_of_queries = 0
         cum_prec = 0
         for index, query in enumerate(q_id_list):
+            if len(predict_ids_list[index])==0: # If no documents found
+                print("No documents found from query {}".format(query))
+                continue
+
             prec = self._prec_at_k(query, predict_ids_list[index], k)
             if prec == -1:
                 print("Query {} has less than {} golden relevant documents, skipping...".format(query, k))
@@ -130,7 +140,7 @@ class Eval():
         avg_prec = cum_prec/(no_of_queries+EPS)
         return avg_prec, no_of_queries
             
-
+ 
     def evaluate(self, q_id_list: List[int], predict_ids_list: List[List[int]]):
         """
         Forwards the list of queries and prediction into each evaluation metric. Evaluates MRR, Hits@5, P@5. 
