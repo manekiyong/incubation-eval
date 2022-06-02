@@ -1,3 +1,4 @@
+from typing import List
 import pandas as pd
 EPS=1e-12
 
@@ -11,10 +12,10 @@ class Eval():
     evaluator.evaluate(q_id_list, predict_ids_list)
     """
 
-    def __init__(self, qrels_file_path):
+    def __init__(self, qrels_file_path: str):
         self.qrels = pd.read_csv(qrels_file_path, sep="\t", header=None, names=['id_left', '0', 'id_right', 'label'])
 
-    def _hits_at_k(self, query_id, predict_ids, k):
+    def _hits_at_k(self, query_id: int, predict_ids: List[int], k: int):
         """
         ARGS:
         query_id (int): id_left from queries.csv
@@ -32,7 +33,7 @@ class Eval():
             ret = 0
         return ret
 
-    def _avg_hits_at_k(self, q_id_list, predict_ids_list, k):
+    def _avg_hits_at_k(self, q_id_list: List[int], predict_ids_list: List[List[int]], k: int):
         """
         ARGS:
         q_id_list (int list): consolidated query ids (id_left) from queries.csv
@@ -53,7 +54,7 @@ class Eval():
         avg_hak = cum_hak/(no_of_queries+EPS)
         return avg_hak
 
-    def _reciprocal_rank(self, query_id, predict_ids):
+    def _reciprocal_rank(self, query_id: int , predict_ids: List[int]):
         """
         ARGS:
         query_id (int): id_left from queries.csv
@@ -71,7 +72,7 @@ class Eval():
         return rr
 
 
-    def _mean_reciprocal_rank(self, q_id_list, predict_ids_list):
+    def _mean_reciprocal_rank(self, q_id_list: List[int], predict_ids_list: List[List[int]]):
         """
         ARGS:
         q_id_list (int list): consolidated query ids (id_left) from queries.csv
@@ -89,7 +90,7 @@ class Eval():
         mrr = cum_rr/(no_of_queries+EPS)
         return mrr
 
-    def _prec_at_k(self, query_id, predict_ids, k):
+    def _prec_at_k(self, query_id: int, predict_ids: List[int], k: int):
         """
         ARGS:
         query_id (int): id_left from queries.csv
@@ -107,7 +108,7 @@ class Eval():
         prec = len(intersect)/(k+EPS)
         return prec
     
-    def _avg_prec_at_k(self, q_id_list, predict_ids_list, k):
+    def _avg_prec_at_k(self, q_id_list: List[int], predict_ids_list: List[List[int]], k:int):
         """
         ARGS:
         q_id_list (int list): consolidated query ids (id_left) from queries.csv
@@ -130,7 +131,7 @@ class Eval():
         return avg_prec, no_of_queries
             
 
-    def evaluate(self, q_id_list, predict_ids_list):
+    def evaluate(self, q_id_list: List[int], predict_ids_list: List[List[int]]):
         """
         Forwards the list of queries and prediction into each evaluation metric. Evaluates MRR, Hits@5, P@5. 
         ARGS:
